@@ -1,36 +1,52 @@
 package com.example.demo.entity;
 
+import com.example.demo.enums.Role;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
-import javax.persistence.*;
-import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.Id;
+import java.time.Instant;
+import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "user")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {  // Не реализует UserDetails
-
+public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    @Column(name = "user_id", nullable = false, columnDefinition = "UUID")
+    private UUID id;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "auth_id", nullable = false, columnDefinition = "TEXT")
+    private String authId;
+
+    @Column(name = "email", nullable = false, columnDefinition = "TEXT")
     private String email;
 
-    @Column(nullable = false)
-    private String password;
+    @Column(name = "name", nullable = false, columnDefinition = "TEXT")
+    private String name;
 
-    @Column(name = "full_name")
-    private String fullName;
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
+    private String description;
 
-    @Column(name = "num_car")
-    private String carNum;
+    @Column(name = "role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
-    @Column(nullable = false)
-    private String role;
+    @Column(name = "balance", nullable = false, columnDefinition = "INT")
+    private int balance;
 
+    @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
+    @CreationTimestamp
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMPTZ")
+    @UpdateTimestamp
+    private Instant updatedAt;
 }
+
