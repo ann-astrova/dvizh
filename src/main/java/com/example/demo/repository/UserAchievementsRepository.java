@@ -19,4 +19,13 @@ public interface UserAchievementsRepository extends Repository<UserAchievements,
             WHERE ua.user.id = :userId
             """)
     List<MyAchievementItem> findMyAchievementItemsByUserId(@Param("userId") UUID userId);
+
+    @Query("""
+            SELECT COUNT(ua) > 0 FROM UserAchievements ua
+            WHERE ua.user.id = :userId AND ua.achievement.id = :achievementId
+            """)
+    boolean existsByUserIdAndAchievementId(
+            @Param("userId") UUID userId,
+            @Param("achievementId") UUID achievementId
+    );
 }
