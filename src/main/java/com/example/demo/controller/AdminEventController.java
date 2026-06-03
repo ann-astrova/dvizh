@@ -19,29 +19,26 @@ import java.util.UUID;
 @PreAuthorize("hasRole('admin')")
 public class AdminEventController {
 
-    private final AdminService adminService;
+    private final AdminService adminService; // admin service
 
-    public AdminEventController(AdminService adminService) {
+    public AdminEventController(AdminService adminService) { // constructor
         this.adminService = adminService;
     }
 
     @PostMapping("/events/{id}/approve")
     public EventModerationResponse approve(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal AppUserPrincipal currentAdmin
+            @PathVariable UUID id, // event id
+            @AuthenticationPrincipal AppUserPrincipal currentAdmin // current admin id from Security Context
     ) {
-        return adminService.approve(id, currentAdmin.userId());
+        return adminService.approve(id, currentAdmin.userId()); // approve event
     }
 
     @PostMapping("/events/{id}/reject")
-    public EventModerationResponse reject(@PathVariable UUID id) {
-        // TODO: adminService.reject(id, currentAdmin.userId())
-        return new EventModerationResponse(
-                id,
-                "rejected",
-                UUID.fromString("00000000-0000-0000-0000-000000000001"),
-                Instant.parse("2025-03-16T16:20:00Z")
-        );
+    public EventModerationResponse reject(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal AppUserPrincipal currentAdmin
+    ) {
+        return adminService.reject(id, currentAdmin.userId());
     }
 
     @PostMapping("/events/{id}/attendance/{userId}")
