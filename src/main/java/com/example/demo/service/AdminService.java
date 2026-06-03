@@ -27,8 +27,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Service
-public class AdminService {
+public class AdminService { // admin service
 
+    // repositories
     private final EventRepository eventRepository;
     private final EventParticipantsRepository eventParticipantsRepository;
     private final UserRepository userRepository;
@@ -37,7 +38,7 @@ public class AdminService {
     private final NotificationRepository notificationRepository;
     private final EntityManager entityManager;
 
-    public AdminService(
+    public AdminService( // constructor
             EventRepository eventRepository,
             EventParticipantsRepository eventParticipantsRepository,
             UserRepository userRepository,
@@ -55,8 +56,10 @@ public class AdminService {
         this.entityManager = entityManager;
     }
 
+    // approve event
     @Transactional
     public EventModerationResponse approve(UUID eventId, UUID adminUserId) {
+        // checking that the action is allowed
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
 
@@ -67,12 +70,15 @@ public class AdminService {
         User admin = userRepository.findById(adminUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin user not found"));
 
+        // approve event
         event.setStatus(EventStatus.approved);
         event.setModeratedBy(admin);
         Event saved = eventRepository.save(event);
 
+        // check and grant achievements
         checkAndGrantCreatedEventAchievements(saved.getCreator());
 
+        // return response
         return new EventModerationResponse(
                 saved.getId(),
                 saved.getStatus().name(),
@@ -81,7 +87,9 @@ public class AdminService {
         );
     }
 
+    // reject event
     public EventModerationResponse reject(UUID eventId, UUID adminUserId) {
+        // checking that the action is allowed
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
 
@@ -92,10 +100,12 @@ public class AdminService {
         User admin = userRepository.findById(adminUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin user not found"));
 
+        // reject event
         event.setStatus(EventStatus.rejected);
         event.setModeratedBy(admin);
         Event saved = eventRepository.save(event);
 
+        // return response
         return new EventModerationResponse(
                 saved.getId(),
                 saved.getStatus().name(),
@@ -104,6 +114,7 @@ public class AdminService {
         );
     }
 
+    // confirm attendance
     @Transactional // transaction to make a transaction in db
     public AttendanceConfirmationResponse confirmAttendance(
             UUID eventId,
@@ -111,6 +122,7 @@ public class AdminService {
             UUID adminUserId,
             ConfirmAttendanceRequest request
     ) {
+        // checking that the action is allowed
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
 
@@ -121,13 +133,13 @@ public class AdminService {
             );
         }
 
-        User admin = userRepository.findById(adminUserId)
+        User admin = userRepository.findById(adminUserId) // find admin by id
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin user not found"));
 
-        User student = userRepository.findById(userId)
+        User student = userRepository.findById(userId) // find user by id
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        EventParticipants participation = eventParticipantsRepository
+        EventParticipants participation = eventParticipantsRepository // find participation by event id and user id
                 .findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -135,10 +147,10 @@ public class AdminService {
                 ));
 
         ParticipationStatus currentStatus = participation.getStatus();
-        if (currentStatus == ParticipationStatus.attended) {
+        if (currentStatus == ParticipationStatus.attended) { // check if attendance is already confirmed
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attendance already confirmed");
         }
-        if (currentStatus != ParticipationStatus.registered && currentStatus != ParticipationStatus.planned) {
+        if (currentStatus != ParticipationStatus.registered && currentStatus != ParticipationStatus.planned) { // check if attendance is planned or registered
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Attendance can only be confirmed from planned or registered status"
@@ -146,10 +158,11 @@ public class AdminService {
         }
 
         int rewardAmount = resolveParticipationReward(request);
-        if (rewardAmount < 0) {
+        if (rewardAmount < 0) { // check if reward amount is not negative
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reward_amount must not be negative");
         }
 
+        // confirm attendance
         Instant attendedAt = Instant.now();
         int updated = eventParticipantsRepository.markAsAttended(
                 eventId,
@@ -158,22 +171,25 @@ public class AdminService {
                 attendedAt,
                 ParticipationStatus.attended
         );
-        if (updated == 0) {
+        if (updated == 0) { // check if participation record is found
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Participation record not found");
         }
 
-        if (rewardAmount > 0) {
+        // add reward to user balance
+        if (rewardAmount > 0) { // check if reward amount is positive
             student.setBalance(student.getBalance() + rewardAmount);
             userRepository.save(student);
-            notificationRepository.save(buildNotification(
+            notificationRepository.save(buildNotification( // build notification
                     student,
                     "currency",
                     "Начислено " + rewardAmount + " монет за посещение мероприятия"
             ));
         }
 
+        // check and grant achievements
         checkAndGrantAttendanceAchievements(student);
 
+        // return response
         return new AttendanceConfirmationResponse(
                 eventId,
                 userId,
@@ -182,6 +198,7 @@ public class AdminService {
         );
     }
 
+    // resolve participation reward
     private static int resolveParticipationReward(ConfirmAttendanceRequest request) {
         if (request == null) {
             return 0;
@@ -191,6 +208,7 @@ public class AdminService {
 
     //TODO: переделать логику сверки с ачивками - должно брать условие ачивки из бд и сверять с ним, а не быть захардкожено
     private void checkAndGrantAttendanceAchievements(User user) {
+        // count attended events
         long attendedCount = eventParticipantsRepository.countByUserIdAndStatus(
                 user.getId(),
                 ParticipationStatus.attended
@@ -206,7 +224,7 @@ public class AdminService {
 
     //TODO: переделать логику сверки с ачивками - должно брать условие ачивки из бд и сверять с ним, а не быть захардкожено
     private void checkAndGrantCreatedEventAchievements(User creator) {
-        long approvedCreatedCount = eventRepository.countByCreatorIdAndStatus(
+        long approvedCreatedCount = eventRepository.countByCreatorIdAndStatus( // count approved created events
                 creator.getId(),
                 EventStatus.approved
         );
@@ -216,36 +234,44 @@ public class AdminService {
         }
     }
 
+    // try to award achievement by title
     private void tryAwardAchievementByTitle(User user, String achievementTitle) {
         try {
+            // find achievement by title
             achievementRepository.findByTitle(achievementTitle)
                     .ifPresent(achievement -> awardAchievement(user, achievement.getId()));
         } catch (RuntimeException ignored) {
-            // нет ачивки в БД или сбой при выдаче — не откатываем approve / confirmAttendance
+            // нет ачивки в БД или сбой при выдаче - не откатываем approve / confirmAttendance
         }
     }
 
+    // award achievement
     private void awardAchievement(User user, UUID achievementId) {
         try {
             achievementRepository.findById(achievementId).ifPresent(achievement -> {
+                // check if achievement is already awarded
                 if (userAchievementsRepository.existsByUserIdAndAchievementId(user.getId(), achievementId)) {
                     return;
                 }
 
+                // award achievement
                 UserAchievements userAchievement = new UserAchievements();
                 userAchievement.setUser(user);
                 userAchievement.setAchievement(achievement);
                 userAchievement.setAwardedAt(Instant.now());
                 entityManager.persist(userAchievement);
 
+                // add reward to user balance
                 user.setBalance(user.getBalance() + achievement.getRewardAmount());
                 userRepository.save(user);
 
+                // build notification
                 notificationRepository.save(buildNotification(
                         user,
                         "achievement",
                         "Получено достижение: " + achievement.getTitle()
                 ));
+                // build notification
                 notificationRepository.save(buildNotification(
                         user,
                         "currency",
@@ -257,12 +283,13 @@ public class AdminService {
         }
     }
 
+    // build notification
     private Notification buildNotification(User user, String type, String message) {
         Notification notification = new Notification();
         notification.setUser(user);
         notification.setType(type);
         notification.setMessage(message);
         notification.setIsRead("false");
-        return notification;
+        return notification; // return notification
     }
 }
