@@ -2,7 +2,6 @@ package com.example.demo.dto;
 
 import com.example.demo.enums.EventStatus;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;
 
@@ -10,9 +9,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class GetEvent {
+public class GetEventDetails {
     private UUID id;
     private String title;
     private String description;
@@ -25,5 +23,7 @@ public class GetEvent {
     private int currentParticipants;
     private Boolean isFinished;
     private GetUser creator;
-
+    private GetUser moderatedBy;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

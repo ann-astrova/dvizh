@@ -17,6 +17,15 @@ import java.util.UUID;
 public interface EventParticipantsRepository extends Repository<EventParticipants, Long> {
 
         @Query("""
+                SELECT COUNT(ep) FROM EventParticipants ep
+                WHERE ep.event.id = :eventId AND ep.status = :registered
+                """)
+        int countByEventIdAndStatus(
+                @Param("eventId") UUID eventId,
+                @Param("registered") ParticipationStatus registered
+        );
+
+        @Query("""
             SELECT new com.example.demo.dto.MyEventItem(
                 e.id, e.title, e.status.name(), ep.status.name())
             FROM EventParticipants ep
