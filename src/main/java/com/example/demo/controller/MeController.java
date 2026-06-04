@@ -1,12 +1,10 @@
 package com.example.demo.controller;
 
-import com.example.demo.config.AppUserPrincipal;
 import com.example.demo.dto.MyAchievementsResponse;
 import com.example.demo.dto.MyCreatedEventsResponse;
 import com.example.demo.dto.MyEventsResponse;
 import com.example.demo.service.MeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
