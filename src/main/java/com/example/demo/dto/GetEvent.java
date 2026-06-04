@@ -1,30 +1,23 @@
 package com.example.demo.dto;
 
+import com.example.demo.enums.EventStatus;
+import lombok.Data;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Data
 public class GetEvent {
-    private String id;
+    private UUID id;
     private String title;
-
-            "description": "Backend competition",
-            "location": "Amsterdam",
-
-            "category": {
-        "id": "uuid-cat",
-                "name": "IT"
-    },
-
-            "start_time": "2026-05-25T10:00:00Z",
-            "end_time": "2026-05-25T18:00:00Z",
-
-            "status": "approved",
-
-            "max_participants": 50,
-            "current_participants": 32,
-
-            "is_finished": false,
-
-            "creator": {
-        "id": "uuid-user",
-                "name": "Ivan"
-
-
-    }
+    private String description;
+    private String location;
+    private GetCategory category;
+    private Instant startTime;
+    private Instant endTime;
+    private EventStatus status;
+    private int maxParticipants;
+    private int currentParticipants;
+    private Boolean isFinished;
+    private GetUser creator;
+}
