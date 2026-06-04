@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.UUID;
 
-public interface UserAchievementsRepository extends Repository<UserAchievements, UUID> {
+public interface UserAchievementsRepository extends Repository<UserAchievements, Long> {
 
     @Query("""
             SELECT new com.example.demo.dto.MyAchievementItem(

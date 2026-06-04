@@ -15,6 +15,10 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventParticipants {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     @ManyToOne
     private Event event;
 

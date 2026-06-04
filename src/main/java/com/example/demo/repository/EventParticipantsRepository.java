@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface EventParticipantsRepository extends Repository<EventParticipants, UUID> {
+public interface EventParticipantsRepository extends Repository<EventParticipants, Long> {
 
         @Query("""
             SELECT new com.example.demo.dto.MyEventItem(
