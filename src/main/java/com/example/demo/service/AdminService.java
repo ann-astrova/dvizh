@@ -18,6 +18,7 @@ import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.UserAchievementsRepository;
 import com.example.demo.repository.UserRepository;
 import jakarta.persistence.EntityManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,31 +31,21 @@ import java.util.UUID;
 public class AdminService { // admin service
 
     // repositories
-    private final EventRepository eventRepository;
-    private final EventParticipantsRepository eventParticipantsRepository;
-    private final UserRepository userRepository;
-    private final AchievementRepository achievementRepository;
-    private final UserAchievementsRepository userAchievementsRepository;
-    private final NotificationRepository notificationRepository;
-    private final EntityManager entityManager;
+    @Autowired
+    private EventRepository eventRepository;
+    @Autowired
+    private EventParticipantsRepository eventParticipantsRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private AchievementRepository achievementRepository;
+    @Autowired
+    private UserAchievementsRepository userAchievementsRepository;
+    @Autowired
+    private NotificationRepository notificationRepository;
+    @Autowired
+    private EntityManager entityManager;
 
-    public AdminService( // constructor
-            EventRepository eventRepository,
-            EventParticipantsRepository eventParticipantsRepository,
-            UserRepository userRepository,
-            AchievementRepository achievementRepository,
-            UserAchievementsRepository userAchievementsRepository,
-            NotificationRepository notificationRepository,
-            EntityManager entityManager
-    ) {
-        this.eventRepository = eventRepository;
-        this.eventParticipantsRepository = eventParticipantsRepository;
-        this.userRepository = userRepository;
-        this.achievementRepository = achievementRepository;
-        this.userAchievementsRepository = userAchievementsRepository;
-        this.notificationRepository = notificationRepository;
-        this.entityManager = entityManager;
-    }
 
     // approve event
     @Transactional

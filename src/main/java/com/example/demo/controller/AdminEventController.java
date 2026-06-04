@@ -5,6 +5,7 @@ import com.example.demo.dto.AttendanceConfirmationResponse;
 import com.example.demo.dto.ConfirmAttendanceRequest;
 import com.example.demo.dto.EventModerationResponse;
 import com.example.demo.service.AdminService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,14 +18,9 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('admin')")
 public class AdminEventController {
-
-    private final AdminService adminService;
-
-    public AdminEventController(AdminService adminService) {
-        this.adminService = adminService;
-    }
+    @Autowired
+    private AdminService adminService;
 
     @PostMapping("/events/{id}/approve")
     public EventModerationResponse approve(

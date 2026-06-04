@@ -6,6 +6,7 @@ import com.example.demo.dto.MyEventsResponse;
 import com.example.demo.repository.EventParticipantsRepository;
 import com.example.demo.repository.EventRepository;
 import com.example.demo.repository.UserAchievementsRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -13,19 +14,13 @@ import java.util.UUID;
 @Service
 public class MeService {
 
-    private final EventParticipantsRepository eventParticipantsRepository;
-    private final EventRepository eventRepository;
-    private final UserAchievementsRepository userAchievementsRepository;
+    @Autowired
+    private EventParticipantsRepository eventParticipantsRepository;
+    @Autowired
+    private EventRepository eventRepository;
+    @Autowired
+    private UserAchievementsRepository userAchievementsRepository;
 
-    public MeService(
-            EventParticipantsRepository eventParticipantsRepository,
-            EventRepository eventRepository,
-            UserAchievementsRepository userAchievementsRepository
-    ) {
-        this.eventParticipantsRepository = eventParticipantsRepository;
-        this.eventRepository = eventRepository;
-        this.userAchievementsRepository = userAchievementsRepository;
-    }
 
     public MyEventsResponse getMyEvents(UUID userId) {
         return new MyEventsResponse(
