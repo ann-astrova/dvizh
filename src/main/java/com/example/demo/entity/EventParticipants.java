@@ -33,7 +33,6 @@ public class EventParticipants {
     private User confirmedBy;
 
     @Column(name = "confirmed_at", columnDefinition = "TIMESTAMPTZ")
-    @CreationTimestamp
     private Instant confirmedAt;
 
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMPTZ")

@@ -2,12 +2,10 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.*;
 import com.example.demo.security.DemoUserDetails;
-import com.example.demo.service.AdminService;
 import com.example.demo.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,6 +42,26 @@ public class UserEventController {
         PatchEventResponse patchEventResponse = eventService.PatchEvent(patchEventRequest, userDetails.getAuthId(), id);
         return ResponseEntity.ok().body(patchEventResponse);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteEvent(@AuthenticationPrincipal DemoUserDetails userDetails, @PathVariable UUID id) {
+        DeleteEventResponse deleteEventResponse = eventService.DeleteEvent(id, userDetails.getAuthId());
+        return ResponseEntity.ok().body(deleteEventResponse);
+    }
+
+    @PostMapping("/{id}/participation")
+    public ResponseEntity<?> signUp(@AuthenticationPrincipal DemoUserDetails userDetails, @PathVariable UUID id, @RequestBody SignUpRequest signUpRequest) {
+        SignUpOrDeleteResponse signUpOrDeleteResponse =  eventService.SignUp(id, userDetails.getAuthId(), signUpRequest.getStatus());
+        return ResponseEntity.ok().body(signUpOrDeleteResponse);
+    }
+
+    @DeleteMapping("/{id}/participation")
+    public ResponseEntity<?> deleteParticipants(@AuthenticationPrincipal DemoUserDetails userDetails, @PathVariable UUID id) {
+        SignUpOrDeleteResponse signUpOrDeleteResponse =  eventService.DeleteParticipants(id, userDetails.getAuthId());
+        return ResponseEntity.ok().body(signUpOrDeleteResponse);
+    }
+
+
 
 
 

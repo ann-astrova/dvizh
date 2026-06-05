@@ -4,6 +4,7 @@ import com.example.demo.dto.MyEventItem;
 import com.example.demo.entity.EventParticipants;
 import com.example.demo.entity.User;
 import com.example.demo.enums.ParticipationStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
@@ -14,7 +15,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface EventParticipantsRepository extends Repository<EventParticipants, Long> {
+public interface EventParticipantsRepository extends JpaRepository<EventParticipants, Long> {
+
+    boolean existsByUserIdAndEventId(UUID userId, UUID eventId);
 
         @Query("""
                 SELECT COUNT(ep) FROM EventParticipants ep
@@ -67,4 +70,5 @@ public interface EventParticipantsRepository extends Repository<EventParticipant
                 @Param("userId") UUID userId,
                 @Param("attended") ParticipationStatus attended
         );
+
 }

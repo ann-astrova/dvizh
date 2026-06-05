@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.*;
 import com.example.demo.entity.Category;
 import com.example.demo.entity.Event;
+import com.example.demo.entity.EventParticipants;
 import com.example.demo.entity.User;
 import com.example.demo.enums.EventStatus;
 import com.example.demo.enums.ParticipationStatus;
@@ -20,7 +21,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -96,7 +96,6 @@ public class EventService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
 
         GetEventDetails getEventDetails = new GetEventDetails();
-        GetCategory getCategory = new GetCategory();
 
         getEventDetails.setId(event.getId());
         getEventDetails.setTitle(event.getTitle());
@@ -144,7 +143,8 @@ public class EventService {
         event.setEndTime(request.getEndTime());
         event.setMaxParticipants(request.getMaxParticipants());
 
-        Category category = categoryRepository.findById(request.getCategoryId());
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
         event.setCategory(category);
 
         if (creator.getRole().name().equals("ADMIN")) {
@@ -208,7 +208,8 @@ public class EventService {
         }
 
         if (newCategoryId != null){
-            event.setCategory(categoryRepository.findById(newCategoryId));
+            event.setCategory(categoryRepository.findById(newCategoryId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found")));
         }
         eventRepository.save(event);
         return event;
@@ -237,6 +238,66 @@ public class EventService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Event is unavailable for patching");
         }
     }
+
+    public DeleteEventResponse DeleteEvent(UUID eventId, String authId){
+        User user = userRepository.findByAuthId(authId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+        if (user.getRole().name().equals("student") && !event.getCreator().getId().equals(user.getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to delete this event");
+        }
+        event.setStatus(EventStatus.cancelled);
+        DeleteEventResponse deleteEventResponse = new DeleteEventResponse();
+        deleteEventResponse.setEventId(eventId);
+        deleteEventResponse.setUpdatedAt(event.getUpdatedAt());
+        deleteEventResponse.setStatus(EventStatus.cancelled);
+        return  deleteEventResponse;
+    }
+
+    public SignUpOrDeleteResponse SignUp(UUID eventId, String authId, ParticipationStatus status){
+        User user = userRepository.findByAuthId(authId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (user.getRole().name().equals("admin")){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only student can leave sign up");
+        }
+        if (status.equals(ParticipationStatus.registered) && eventParticipantsRepository.existsByUserIdAndEventId(user.getId(), eventId)){
+            EventParticipants eventParticipants = eventParticipantsRepository.findByEventIdAndUserId(eventId, user.getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sign not found"));
+            eventParticipants.setStatus(status);
+            eventParticipantsRepository.save(eventParticipants);
+        }
+        else{
+            EventParticipants eventParticipants = new EventParticipants();
+            eventParticipants.setStatus(status);
+            eventParticipants.setUser(user);
+            Event event = eventRepository.findById(eventId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+            eventParticipants.setEvent(event);
+            eventParticipantsRepository.save(eventParticipants);
+        }
+        SignUpOrDeleteResponse signUpOrDeleteResponse = new SignUpOrDeleteResponse();
+        signUpOrDeleteResponse.setEventId(eventId);
+        signUpOrDeleteResponse.setUpdatedAt(Instant.now());
+        signUpOrDeleteResponse.setStatus(status);
+        signUpOrDeleteResponse.setUserId(user.getId());
+        return signUpOrDeleteResponse;
+    }
+
+    public SignUpOrDeleteResponse DeleteParticipants(UUID eventId, String authId){
+        User user = userRepository.findByAuthId(authId).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (user.getRole().name().equals("admin")){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only student can delete sign up");
+        }
+        EventParticipants eventParticipants = eventParticipantsRepository.findByEventIdAndUserId(eventId, user.getId())
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sign not found"));
+        eventParticipantsRepository.delete(eventParticipants);
+        SignUpOrDeleteResponse signUpOrDeleteResponse = new SignUpOrDeleteResponse();
+        signUpOrDeleteResponse.setEventId(eventId);
+        signUpOrDeleteResponse.setUserId(user.getId());
+        signUpOrDeleteResponse.setStatus(ParticipationStatus.cancelled);
+        signUpOrDeleteResponse.setUpdatedAt(Instant.now());
+        return signUpOrDeleteResponse;
+    }
+
+
 
 
 
