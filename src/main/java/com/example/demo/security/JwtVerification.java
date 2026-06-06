@@ -77,4 +77,9 @@ public class JwtVerification {
         SignedJWT signedJWT = verification(token);
         return signedJWT.getJWTClaimsSet().getSubject();
     }
+
+    public String getEmail(String token) throws Exception {
+        SignedJWT signedJWT = verification(token);
+        return signedJWT.getJWTClaimsSet().getStringClaim("email");
+    }
 }

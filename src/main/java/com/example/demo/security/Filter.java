@@ -32,7 +32,8 @@ public class Filter extends OncePerRequestFilter {
         String token = authorizationHeader.substring(7);
         try{
             String authId = verification.getAuthId(token);
-            DemoUserDetails userDetails = new DemoUserDetails(authId);
+            String email = verification.getEmail(token);
+            DemoUserDetails userDetails = new DemoUserDetails(authId, email);
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, token, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

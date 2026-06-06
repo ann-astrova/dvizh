@@ -16,4 +16,12 @@ public final class CurrentAuth {
         }
         return details.getAuthId();
     }
+
+    public static String email() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof DemoUserDetails details)) {
+            return null;
+        }
+        return details.getEmail();
+    }
 }
