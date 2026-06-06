@@ -30,7 +30,7 @@ public interface EventParticipantsRepository extends JpaRepository<EventParticip
 
         @Query("""
             SELECT new com.example.demo.dto.MyEventItem(
-                e.id, e.title, e.status.name(), ep.status.name())
+                e.id, e.title,  CAST(e.status AS string),  CAST(ep.status AS string))
             FROM EventParticipants ep
             JOIN ep.event e
             WHERE ep.user.id = :userId
