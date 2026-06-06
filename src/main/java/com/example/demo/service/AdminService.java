@@ -49,7 +49,7 @@ public class AdminService { // admin service
 
     // approve event
     @Transactional
-    public EventModerationResponse approve(UUID eventId, UUID adminUserId) {
+    public EventModerationResponse approve(UUID eventId, String adminAuthId) {
         // checking that the action is allowed
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
@@ -58,7 +58,7 @@ public class AdminService { // admin service
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only pending events can be approved");
         }
 
-        User admin = userRepository.findById(adminUserId)
+        User admin = userRepository.findByAuthId(adminAuthId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin user not found"));
 
         // approve event
@@ -79,7 +79,7 @@ public class AdminService { // admin service
     }
 
     // reject event
-    public EventModerationResponse reject(UUID eventId, UUID adminUserId) {
+    public EventModerationResponse reject(UUID eventId, String adminAuthId) {
         // checking that the action is allowed
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
@@ -88,7 +88,7 @@ public class AdminService { // admin service
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only pending events can be rejected");
         }
 
-        User admin = userRepository.findById(adminUserId)
+        User admin = userRepository.findByAuthId(adminAuthId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin user not found"));
 
         // reject event
@@ -110,7 +110,7 @@ public class AdminService { // admin service
     public AttendanceConfirmationResponse confirmAttendance(
             UUID eventId,
             UUID userId,
-            UUID adminUserId,
+            String adminAuthId,
             ConfirmAttendanceRequest request
     ) {
         // checking that the action is allowed
@@ -124,7 +124,7 @@ public class AdminService { // admin service
             );
         }
 
-        User admin = userRepository.findById(adminUserId) // find admin by id
+        User admin = userRepository.findByAuthId(adminAuthId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Admin user not found"));
 
         User student = userRepository.findById(userId) // find user by id
