@@ -22,7 +22,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
     @Query("SELECT e " +
             "FROM Event e " +
-            "WHERE CURRENT_TIMESTAMP < e.endTime" +
+            "WHERE CURRENT_TIMESTAMP < e.endTime " +
             "ORDER BY e.startTime ASC")
     List<Event> findSomeEventsSorted();
 
