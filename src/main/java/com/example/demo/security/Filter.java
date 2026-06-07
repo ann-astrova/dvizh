@@ -25,14 +25,15 @@ public class Filter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader == null && !authorizationHeader.startsWith("Bearer ")) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
         String token = authorizationHeader.substring(7);
         try{
             String authId = verification.getAuthId(token);
-            DemoUserDetails userDetails = new DemoUserDetails(authId);
+            String email = verification.getEmail(token);
+            DemoUserDetails userDetails = new DemoUserDetails(authId, email);
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, token, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

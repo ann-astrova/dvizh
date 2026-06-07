@@ -8,9 +8,11 @@ import java.util.Collections;
 
 public class DemoUserDetails implements UserDetails {
     private final String authId;
+    private final String email;
 
-    public DemoUserDetails(String authId) {
+    public DemoUserDetails(String authId, String email) {
         this.authId = authId;
+        this.email = email != null ? email : "";
     }
 
     @Override
@@ -50,5 +52,9 @@ public class DemoUserDetails implements UserDetails {
 
     public String getAuthId() {
         return authId;
+    }
+
+    public String getEmail() {
+        return email;
     }
 }

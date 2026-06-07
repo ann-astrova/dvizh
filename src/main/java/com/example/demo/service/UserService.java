@@ -33,7 +33,8 @@ public class UserService {
         return userRepository.findByAuthId(authId).orElseGet(() -> {
             User u = new User();
             u.setAuthId(authId);
-            u.setEmail("");                       // email можно подтянуть из токена позже (зона auth)
+            String email = CurrentAuth.email();
+            u.setEmail(email != null ? email : "");
             u.setName("Новый пользователь");
             u.setDescription("");
             u.setRole(Role.student);
