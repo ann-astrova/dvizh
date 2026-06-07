@@ -1,16 +1,18 @@
 package com.example.demo.dto;
 
 import com.example.demo.enums.EventStatus;
+import com.example.demo.enums.ParticipationStatus;
 import lombok.Data;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.annotation.JsonNaming;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class GetEventDetails {
+public class AdminGetEventDetails {
     private UUID id;
     private String title;
     private String description;
@@ -26,4 +28,5 @@ public class GetEventDetails {
     private GetUser moderatedBy;
     private Instant createdAt;
     private Instant updatedAt;
+    private List<GetParticipant> participants;
 }

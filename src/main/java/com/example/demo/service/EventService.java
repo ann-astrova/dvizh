@@ -7,12 +7,14 @@ import com.example.demo.entity.EventParticipants;
 import com.example.demo.entity.User;
 import com.example.demo.enums.EventStatus;
 import com.example.demo.enums.ParticipationStatus;
+import com.example.demo.enums.Role;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.EventParticipantsRepository;
 import com.example.demo.repository.EventRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -81,7 +83,8 @@ public class EventService {
 
     }
 
-    public GetEvents GetEvents(){
+    public GetEvents GetEvents(String authId){
+
         List<Event> events = eventRepository.findAll();
         List<GetEvent> getEvents = new ArrayList<>();
         for (Event event : events) {
@@ -90,12 +93,11 @@ public class EventService {
         return new GetEvents(getEvents);
     }
 
-
-    public GetEventDetails GetEventDetails(UUID id){
+    public AdminGetEventDetails AdminGetEventDetails(UUID id){
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
 
-        GetEventDetails getEventDetails = new GetEventDetails();
+        AdminGetEventDetails getEventDetails = new AdminGetEventDetails();
 
         getEventDetails.setId(event.getId());
         getEventDetails.setTitle(event.getTitle());
@@ -124,8 +126,65 @@ public class EventService {
         getEventDetails.setCurrentParticipants(eventParticipantsRepository.countByEventIdAndStatus(event.getId(), ParticipationStatus.registered));
         getEventDetails.setCreatedAt(event.getCreatedAt());
         getEventDetails.setUpdatedAt(event.getUpdatedAt());
+
+        List<User> participants = eventParticipantsRepository.findByIdAndStatus(id, ParticipationStatus.registered);
+        List<GetParticipant> getParticipants = new ArrayList<>();
+        for (User participant : participants) {
+            GetParticipant getParticipant = new GetParticipant();
+            getParticipant.setParticipationStatus(ParticipationStatus.registered);
+            getParticipant.setName(participant.getName());
+            getParticipant.setUserId(participant.getId());
+            getParticipants.add(getParticipant);
+        }
+        getEventDetails.setParticipants(getParticipants);
         return getEventDetails;
     }
+
+    public UserGetEventDetails UserGetEventDetails(UUID id){
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
+
+        UserGetEventDetails getEventDetails = new UserGetEventDetails();
+
+        getEventDetails.setId(event.getId());
+        getEventDetails.setTitle(event.getTitle());
+        getEventDetails.setDescription(event.getDescription());
+        getEventDetails.setLocation(event.getLocation());
+        getEventDetails.setStartTime(event.getStartTime());
+        getEventDetails.setEndTime(event.getEndTime());
+        getEventDetails.setStatus(event.getStatus());
+        getEventDetails.setMaxParticipants(event.getMaxParticipants());
+
+        User creator = event.getCreator();
+        getEventDetails.setCreator(makeGetUser(creator));
+
+        Category category = event.getCategory();
+        getEventDetails.setCategory(makeGetCategory(category));
+
+        if (event.getEndTime().isBefore(Instant.now())) {
+            getEventDetails.setIsFinished(true);
+        } else {
+            getEventDetails.setIsFinished(false);
+        }
+
+        getEventDetails.setCurrentParticipants(eventParticipantsRepository.countByEventIdAndStatus(event.getId(), ParticipationStatus.registered));
+        getEventDetails.setCreatedAt(event.getCreatedAt());
+        getEventDetails.setUpdatedAt(event.getUpdatedAt());
+
+        return getEventDetails;
+    }
+
+
+    public ResponseEntity<?> GetEventDetails(UUID id, String authId){
+        User user = userRepository.findByAuthId(authId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (user.getRole().equals(Role.student)) {
+           return ResponseEntity.ok(UserGetEventDetails(id));
+        }
+        else{
+            return ResponseEntity.ok(AdminGetEventDetails(id));
+        }
+    }
+
 
     public CreateEventResponse CreateEvent(CreateEventRequest request, String authId){
         User creator = userRepository.findByAuthId(authId).orElseThrow(
@@ -200,11 +259,13 @@ public class EventService {
         if (newEndTime != null){
             event.setEndTime(newEndTime);
         }
-        if (newMaxParticipants != null && currentParticipants <= newMaxParticipants){
-            event.setMaxParticipants(newMaxParticipants);
-        }
-        else{
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Max participants cannot be less than current " + currentParticipants);
+        if (newMaxParticipants != null){
+            if (currentParticipants <= newMaxParticipants){
+                event.setMaxParticipants(newMaxParticipants);
+            }
+            else{
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Max participants cannot be less than current " + currentParticipants);
+            }
         }
 
         if (newCategoryId != null){

@@ -18,15 +18,14 @@ public class UserEventController {
     private EventService eventService;
 
     @GetMapping("")
-    public ResponseEntity<?> getEvents() {
-        GetEvents getEvents = eventService.GetEvents();
+    public ResponseEntity<?> getEvents(@AuthenticationPrincipal DemoUserDetails userDetails) {
+        GetEvents getEvents = eventService.GetEvents(userDetails.getAuthId());
         return ResponseEntity.ok().body(getEvents);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getEventDetail(@PathVariable UUID id) {
-        GetEventDetails getEventDetails = eventService.GetEventDetails(id);
-        return ResponseEntity.ok().body(getEventDetails);
+    public ResponseEntity<?> getEventDetail(@PathVariable UUID id, @AuthenticationPrincipal DemoUserDetails userDetails) {
+        return eventService.GetEventDetails(id, userDetails.getAuthId());
     }
 
     @PostMapping("")
