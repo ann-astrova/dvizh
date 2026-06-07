@@ -27,7 +27,7 @@ public class Event {
     private User creator;
 
     @ManyToOne
-    @JoinColumn(name = "moderated_by", nullable = false)
+    @JoinColumn(name = "moderated_by")
     private User moderatedBy;
 
     @ManyToOne

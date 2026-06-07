@@ -40,6 +40,9 @@ public class EventService {
 
 
     private GetUser makeGetUser(User user) {
+        if (user == null) {
+            return null;
+        }
         GetUser getUser = new GetUser();
         getUser.setId(user.getId());
         getUser.setName(user.getName());
