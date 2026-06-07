@@ -15,6 +15,17 @@ import java.util.UUID;
 
 public interface EventRepository extends JpaRepository<Event, UUID> {
 
+    @Query("SELECT e " +
+            "FROM Event e " +
+            "ORDER BY e.startTime ASC")
+    List<Event> findAllEventsSorted();
+
+    @Query("SELECT e " +
+            "FROM Event e " +
+            "WHERE CURRENT_TIMESTAMP < e.endTime" +
+            "ORDER BY e.startTime ASC")
+    List<Event> findSomeEventsSorted();
+
 
     boolean existsByCreatorIdAndIdAndStatus(UUID creatorId, UUID eventId, EventStatus status);
 

@@ -41,16 +41,6 @@ public class EventService {
     private CategoryRepository categoryRepository;
 
 
-    private GetUser makeGetUser(User user) {
-        if (user == null) {
-            return null;
-        }
-        GetUser getUser = new GetUser();
-        getUser.setId(user.getId());
-        getUser.setName(user.getName());
-        return getUser;
-    }
-
     private GetCategory makeGetCategory(Category category) {
         GetCategory getCategory = new GetCategory();
         getCategory.setId(category.getId());
@@ -58,22 +48,22 @@ public class EventService {
         return getCategory;
     }
 
-    private GetEvent makeGetEvent(Event event){
+    private GetEvent makeGetEvent(Event event, User user){
         GetEvent getEvent = new GetEvent();
 
         getEvent.setId(event.getId());
         getEvent.setTitle(event.getTitle());
-        getEvent.setDescription(event.getDescription());
         getEvent.setLocation(event.getLocation());
         getEvent.setStartTime(event.getStartTime());
         getEvent.setEndTime(event.getEndTime());
         getEvent.setStatus(event.getStatus());
         getEvent.setMaxParticipants(event.getMaxParticipants());
 
-        User user = event.getCreator();
-        getEvent.setCreator(makeGetUser(user));
-
+        getEvent.setIsCreator(user.equals(event.getCreator()));
         getEvent.setCategory(makeGetCategory(event.getCategory()));
+        EventParticipants eventParticipants = eventParticipantsRepository.findByEventIdAndUserId(event.getId(), user.getId())
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Participant not found"));
+        getEvent.setMyParticipationStatus(eventParticipants.getStatus());
 
         if (event.getEndTime().isBefore(Instant.now())) {
             getEvent.setIsFinished(true);
@@ -87,13 +77,36 @@ public class EventService {
     }
 
     public GetEvents GetEvents(String authId){
+        User user = userRepository.findByAuthId(authId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (user.getRole().equals(Role.admin)) {
+            List<Event> events = eventRepository.findAllEventsSorted();
+            List<GetEvent> getEvents = new ArrayList<>();
+            for (Event event : events) {
+                getEvents.add(makeGetEvent(event, user));
+            }
+            return new GetEvents(getEvents);
 
-        List<Event> events = eventRepository.findAll();
-        List<GetEvent> getEvents = new ArrayList<>();
-        for (Event event : events) {
-            getEvents.add(makeGetEvent(event));
         }
-        return new GetEvents(getEvents);
+        else{
+            List<Event> events = eventRepository.findSomeEventsSorted();
+            List<GetEvent> getEvents = new ArrayList<>();
+            for (Event event : events) {
+                if (event.getStatus().equals(EventStatus.approved) || event.getStatus().equals(EventStatus.pending)) {
+                    getEvents.add(makeGetEvent(event, user));
+                }
+            }
+            return new GetEvents(getEvents);
+        }
+    }
+
+    private GetUser makeGetUser(User user) {
+        if (user == null) {
+            return null;
+        }
+        GetUser getUser = new GetUser();
+        getUser.setId(user.getId());
+        getUser.setName(user.getName());
+        return getUser;
     }
 
     public AdminGetEventDetails AdminGetEventDetails(UUID id){
@@ -143,7 +156,7 @@ public class EventService {
         return getEventDetails;
     }
 
-    public UserGetEventDetails UserGetEventDetails(UUID id){
+    public UserGetEventDetails UserGetEventDetails(UUID id, User user){
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
 
@@ -157,6 +170,9 @@ public class EventService {
         getEventDetails.setEndTime(event.getEndTime());
         getEventDetails.setStatus(event.getStatus());
         getEventDetails.setMaxParticipants(event.getMaxParticipants());
+
+        EventParticipants eventParticipants = eventParticipantsRepository.findByEventIdAndUserId(id, user.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Participants not found"));
+        getEventDetails.setMyParticipationStatus(eventParticipants.getStatus());
 
         User creator = event.getCreator();
         getEventDetails.setCreator(makeGetUser(creator));
@@ -181,7 +197,7 @@ public class EventService {
     public ResponseEntity<?> GetEventDetails(UUID id, String authId){
         User user = userRepository.findByAuthId(authId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (user.getRole().equals(Role.student)) {
-           return ResponseEntity.ok(UserGetEventDetails(id));
+           return ResponseEntity.ok(UserGetEventDetails(id, user));
         }
         else{
             return ResponseEntity.ok(AdminGetEventDetails(id));

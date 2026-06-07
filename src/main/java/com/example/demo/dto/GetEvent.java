@@ -1,6 +1,8 @@
 package com.example.demo.dto;
 
+import com.example.demo.entity.EventParticipants;
 import com.example.demo.enums.EventStatus;
+import com.example.demo.enums.ParticipationStatus;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import tools.jackson.databind.PropertyNamingStrategies;
@@ -15,7 +17,6 @@ import java.util.UUID;
 public class GetEvent {
     private UUID id;
     private String title;
-    private String description;
     private String location;
     private GetCategory category;
     private Instant startTime;
@@ -23,7 +24,8 @@ public class GetEvent {
     private EventStatus status;
     private int maxParticipants;
     private int currentParticipants;
+    private ParticipationStatus myParticipationStatus;
+    private Boolean isCreator;
     private Boolean isFinished;
-    private GetUser creator;
 
 }
