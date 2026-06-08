@@ -12,6 +12,7 @@ import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.EventParticipantsRepository;
 import com.example.demo.repository.EventRepository;
 import com.example.demo.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +24,16 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @Transactional
 public class EventService {
+
+    @Autowired
+    private EntityManager entityManager;
+
     @Autowired
     private EventParticipantsRepository  eventParticipantsRepository;
 
@@ -61,9 +67,14 @@ public class EventService {
 
         getEvent.setIsCreator(user.equals(event.getCreator()));
         getEvent.setCategory(makeGetCategory(event.getCategory()));
-        EventParticipants eventParticipants = eventParticipantsRepository.findByEventIdAndUserId(event.getId(), user.getId())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Participant not found"));
-        getEvent.setMyParticipationStatus(eventParticipants.getStatus());
+
+        Optional<EventParticipants> eventParticipants = eventParticipantsRepository.findByEventIdAndUserId(event.getId(), user.getId());
+        if (eventParticipants.isPresent()){
+            getEvent.setMyParticipationStatus(eventParticipants.get().getStatus());
+        }
+        else{
+            getEvent.setMyParticipationStatus(null);
+        }
 
         if (event.getEndTime().isBefore(Instant.now())) {
             getEvent.setIsFinished(true);
@@ -171,8 +182,13 @@ public class EventService {
         getEventDetails.setStatus(event.getStatus());
         getEventDetails.setMaxParticipants(event.getMaxParticipants());
 
-        EventParticipants eventParticipants = eventParticipantsRepository.findByEventIdAndUserId(id, user.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Participants not found"));
-        getEventDetails.setMyParticipationStatus(eventParticipants.getStatus());
+        Optional<EventParticipants> eventParticipants = eventParticipantsRepository.findByEventIdAndUserId(event.getId(), user.getId());
+        if (eventParticipants.isPresent()){
+            getEventDetails.setMyParticipationStatus(eventParticipants.get().getStatus());
+        }
+        else{
+            getEventDetails.setMyParticipationStatus(null);
+        }
 
         User creator = event.getCreator();
         getEventDetails.setCreator(makeGetUser(creator));
@@ -232,7 +248,8 @@ public class EventService {
         else{
             event.setStatus(EventStatus.pending);
         }
-        eventRepository.save(event);
+        event = eventRepository.saveAndFlush(event);
+        entityManager.refresh(event);
 
         CreateEventResponse createEventResponse = new CreateEventResponse();
         createEventResponse.setEventId(event.getId());
@@ -309,6 +326,9 @@ public class EventService {
             else if (creator.getRole().name().equals("admin")){
                 event = PatchingEvent(request, eventId);
             }
+            event = eventRepository.saveAndFlush(event);
+            entityManager.refresh(event);
+
             PatchEventResponse patchEventResponse = new PatchEventResponse();
             patchEventResponse.setEventId(eventId);
             patchEventResponse.setUpdatedAt(event.getUpdatedAt());
@@ -326,6 +346,9 @@ public class EventService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not allowed to delete this event");
         }
         event.setStatus(EventStatus.cancelled);
+        event = eventRepository.saveAndFlush(event);
+        entityManager.refresh(event);
+
         DeleteEventResponse deleteEventResponse = new DeleteEventResponse();
         deleteEventResponse.setEventId(eventId);
         deleteEventResponse.setUpdatedAt(event.getUpdatedAt());
