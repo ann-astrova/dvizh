@@ -154,13 +154,14 @@ public class EventService {
         getEventDetails.setCreatedAt(event.getCreatedAt());
         getEventDetails.setUpdatedAt(event.getUpdatedAt());
 
-        List<User> participants = eventParticipantsRepository.findByEventIdAndStatus(id, ParticipationStatus.registered);
+        List<EventParticipants> participants = eventParticipantsRepository.findByEventIdAndStatus(id, ParticipationStatus.registered);
         List<GetParticipant> getParticipants = new ArrayList<>();
-        for (User participant : participants) {
+        for (EventParticipants participant : participants) {
+            User user = participant.getUser();
             GetParticipant getParticipant = new GetParticipant();
             getParticipant.setParticipationStatus(ParticipationStatus.registered);
-            getParticipant.setName(participant.getName());
-            getParticipant.setUserId(participant.getId());
+            getParticipant.setName(user.getName());
+            getParticipant.setUserId(user.getId());
             getParticipants.add(getParticipant);
         }
         getEventDetails.setParticipants(getParticipants);

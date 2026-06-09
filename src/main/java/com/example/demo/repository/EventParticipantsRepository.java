@@ -17,7 +17,7 @@ import java.util.UUID;
 
 public interface EventParticipantsRepository extends JpaRepository<EventParticipants, Long> {
 
-    List<User> findByEventIdAndStatus(UUID id, ParticipationStatus status);
+    List<EventParticipants> findByEventIdAndStatus(UUID id, ParticipationStatus status);
 
     boolean existsByUserIdAndEventId(UUID userId, UUID eventId);
 
