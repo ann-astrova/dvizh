@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.config.AchievementDefinitions;
 import com.example.demo.dto.AttendanceConfirmationResponse;
 import com.example.demo.dto.ConfirmAttendanceRequest;
 import com.example.demo.dto.EventModerationResponse;
@@ -197,31 +198,28 @@ public class AdminService { // admin service
         return request.resolvedRewardAmount();
     }
 
-    //TODO: переделать логику сверки с ачивками - должно брать условие ачивки из бд и сверять с ним, а не быть захардкожено
     private void checkAndGrantAttendanceAchievements(User user) {
-        // count attended events
         long attendedCount = eventParticipantsRepository.countByUserIdAndStatus(
                 user.getId(),
                 ParticipationStatus.attended
         );
 
         if (attendedCount == 1) {
-            tryAwardAchievementByTitle(user, "Первое мероприятие");
+            tryAwardAchievementByTitle(user, AchievementDefinitions.FIRST_ATTENDANCE.title());
         }
         if (attendedCount >= 5) {
-            tryAwardAchievementByTitle(user, "5 мероприятий");
+            tryAwardAchievementByTitle(user, AchievementDefinitions.FIVE_ATTENDANCES.title());
         }
     }
 
-    //TODO: переделать логику сверки с ачивками - должно брать условие ачивки из бд и сверять с ним, а не быть захардкожено
     private void checkAndGrantCreatedEventAchievements(User creator) {
-        long approvedCreatedCount = eventRepository.countByCreatorIdAndStatus( // count approved created events
+        long approvedCreatedCount = eventRepository.countByCreatorIdAndStatus(
                 creator.getId(),
                 EventStatus.approved
         );
 
         if (approvedCreatedCount == 1) {
-            tryAwardAchievementByTitle(creator, "Создал мероприятие");
+            tryAwardAchievementByTitle(creator, AchievementDefinitions.FIRST_CREATED_EVENT.title());
         }
     }
 
