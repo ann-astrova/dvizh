@@ -154,7 +154,7 @@ public class EventService {
         getEventDetails.setCreatedAt(event.getCreatedAt());
         getEventDetails.setUpdatedAt(event.getUpdatedAt());
 
-        List<User> participants = eventParticipantsRepository.findByIdAndStatus(id, ParticipationStatus.registered);
+        List<User> participants = eventParticipantsRepository.findByEventIdAndStatus(id, ParticipationStatus.registered);
         List<GetParticipant> getParticipants = new ArrayList<>();
         for (User participant : participants) {
             GetParticipant getParticipant = new GetParticipant();
@@ -241,7 +241,7 @@ public class EventService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
         event.setCategory(category);
 
-        if (creator.getRole().name().equals("ADMIN")) {
+        if (creator.getRole().name().equals("admin")) {
             event.setModeratedBy(creator);
             event.setStatus(EventStatus.approved);
         }

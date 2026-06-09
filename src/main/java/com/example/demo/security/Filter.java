@@ -24,7 +24,7 @@ public class Filter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        System.out.println("=== FILTER START ===");
+        System.out.println("FILTER START");
         System.out.println("Request URI: " + request.getRequestURI());
         System.out.println("Request Method: " + request.getMethod());
 
@@ -64,7 +64,7 @@ public class Filter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-        System.out.println("=== FILTER END ===");
+        System.out.println("FILTER END");
     }
 
 }
